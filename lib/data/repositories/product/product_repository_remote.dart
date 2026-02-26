@@ -45,4 +45,10 @@ class ProductRepositoryRemote implements ProductRepository {
     }
     return result;
   }
+
+  @override
+  void clearCache() {
+    _categoryCache.clear();
+    _cachedCategories = null;
+  }
 }
