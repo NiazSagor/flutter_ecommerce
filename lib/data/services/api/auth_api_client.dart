@@ -16,7 +16,7 @@ class AuthApiService extends BaseApiService {
     try {
       final response = await _httpClient.post(
         Uri.parse('${ApiEndpoints.baseUrl}${ApiEndpoints.login}'),
-        headers: {'Content-Type': 'application/json'},
+        headers: headers,
         body: jsonEncode({
           'username': loginRequest.username,
           'password': loginRequest.password,
