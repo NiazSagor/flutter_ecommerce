@@ -11,6 +11,8 @@ class AuthViewModel extends ChangeNotifier {
 
   bool _isLoading = false;
 
+  bool get isLoggedIn => _authRepository.isAuthenticated;
+
   bool get isLoading => _isLoading;
 
   String? _errorMessage;

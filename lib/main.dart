@@ -4,6 +4,7 @@ import 'package:flutter_ecommerce/data/repositories/product/product_repository_r
 import 'package:flutter_ecommerce/data/repositories/user/user_repository_remote.dart';
 import 'package:flutter_ecommerce/data/services/api/auth_api_client.dart';
 import 'package:flutter_ecommerce/data/services/api/product_api_service.dart';
+import 'package:flutter_ecommerce/ui/navigation/main_nav.dart';
 import 'package:http/http.dart' as http;
 import 'package:provider/provider.dart';
 import 'ui/features/auth/view_models/auth_view_model.dart';
@@ -59,7 +60,7 @@ class MyApp extends StatelessWidget {
       child: const MaterialApp(
         debugShowCheckedModeBanner: false,
         title: 'Flutter Ecommerce',
-        home: Scaffold(body: ProductListScreen()),
+        home: Scaffold(body: MainNavigationScreen()),
       ),
     );
   }
