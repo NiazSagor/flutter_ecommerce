@@ -60,7 +60,7 @@ class _ProductListScreenState extends State<ProductListScreen>
   @override
   void dispose() {
     context.read<ProductListViewModel>().removeListener(_handleViewModelChange);
-    _tabController!.dispose();
+    _tabController?.dispose();
     super.dispose();
   }
 
@@ -93,10 +93,11 @@ class _ProductListScreenState extends State<ProductListScreen>
                       expandedHeight: 200.0,
                       pinned: true,
                       floating: true,
-                      snap: true,
+                      snap: false,
                       automaticallyImplyLeading: false,
                       forceElevated: innerBoxIsScrolled,
                       flexibleSpace: FlexibleSpaceBar(
+                        stretchModes: const [StretchMode.blurBackground],
                         background: Container(
                           color: Colors.orange,
                           child: Column(
