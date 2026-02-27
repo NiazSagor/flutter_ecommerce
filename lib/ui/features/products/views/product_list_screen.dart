@@ -82,74 +82,72 @@ class _ProductListScreenState extends State<ProductListScreen>
               physics: const BouncingScrollPhysics(
                 parent: AlwaysScrollableScrollPhysics(),
               ),
-              floatHeaderSlivers: true,
               headerSliverBuilder: (context, innerBoxIsScrolled) {
                 return [
+                  SliverToBoxAdapter(
+                    child: Container(
+                      color: Colors.orange,
+                      child: Column(
+                        children: const [
+                          SearchBarPlaceholder(),
+                          SizedBox(height: 10),
+                          PromoStrip(),
+                        ],
+                      ),
+                    ),
+                  ),
                   SliverOverlapAbsorber(
                     handle: NestedScrollView.sliverOverlapAbsorberHandleFor(
                       context,
                     ),
-                    sliver: SliverToBoxAdapter(
-                      child: Container(
-                        color: Colors.orange,
-                        child: Column(
-                          children: const [
-                            SearchBarPlaceholder(),
-                            SizedBox(height: 10),
-                            PromoStrip(),
-                          ],
+                    sliver: SliverAppBar(
+                      pinned: true,
+                      floating: false,
+                      snap: false,
+                      automaticallyImplyLeading: false,
+                      backgroundColor: Colors.orange,
+                      forceElevated: innerBoxIsScrolled,
+                      toolbarHeight: 0,
+                      bottom: TabBar(
+                        splashFactory: NoSplash.splashFactory,
+                        controller: _tabController!,
+                        isScrollable: true,
+                        tabAlignment: TabAlignment.start,
+                        physics: const BouncingScrollPhysics(),
+                        indicatorSize: TabBarIndicatorSize.tab,
+                        indicatorPadding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 8,
                         ),
-                      ),
-                    ),
-                  ),
-
-                  SliverAppBar(
-                    pinned: true,
-                    floating: false,
-                    snap: false,
-                    automaticallyImplyLeading: false,
-                    backgroundColor: Colors.orange,
-                    forceElevated: innerBoxIsScrolled,
-                    toolbarHeight: 0,
-                    bottom: TabBar(
-                      splashFactory: NoSplash.splashFactory,
-                      controller: _tabController!,
-                      isScrollable: true,
-                      tabAlignment: TabAlignment.start,
-                      physics: const BouncingScrollPhysics(),
-                      indicatorSize: TabBarIndicatorSize.tab,
-                      indicatorPadding: const EdgeInsets.symmetric(
-                        horizontal: 8,
-                        vertical: 8,
-                      ),
-                      indicator: BoxDecoration(
-                        borderRadius: BorderRadius.circular(25),
-                        color: Colors.white,
-                      ),
-                      labelColor: Colors.orange.shade800,
-                      unselectedLabelColor: Colors.black.withOpacity(0.7),
-                      labelStyle: const TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.bold,
-                        letterSpacing: 0.5,
-                      ),
-                      unselectedLabelStyle: const TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w500,
-                      ),
-                      dividerColor: Colors.transparent,
-                      tabs: categories
-                          .map(
-                            (name) => Tab(
-                              child: Padding(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 12,
+                        indicator: BoxDecoration(
+                          borderRadius: BorderRadius.circular(25),
+                          color: Colors.white,
+                        ),
+                        labelColor: Colors.orange.shade800,
+                        unselectedLabelColor: Colors.black.withOpacity(0.7),
+                        labelStyle: const TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.bold,
+                          letterSpacing: 0.5,
+                        ),
+                        unselectedLabelStyle: const TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w500,
+                        ),
+                        dividerColor: Colors.transparent,
+                        tabs: categories
+                            .map(
+                              (name) => Tab(
+                                child: Padding(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 12,
+                                  ),
+                                  child: Text(name.toTitleCase()),
                                 ),
-                                child: Text(name.toTitleCase()),
                               ),
-                            ),
-                          )
-                          .toList(),
+                            )
+                            .toList(),
+                      ),
                     ),
                   ),
                 ];
