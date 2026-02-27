@@ -16,14 +16,14 @@ class AuthApiService extends BaseApiService {
     try {
       final response = await _httpClient.post(
         Uri.parse('${ApiEndpoints.baseUrl}${ApiEndpoints.login}'),
-        headers: headers,
+        headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
           'username': loginRequest.username,
           'password': loginRequest.password,
         }),
       );
 
-      if (response.statusCode == 200) {
+      if (response.statusCode >= 200 && response.statusCode < 300) {
         return Result.ok(AuthDto.fromJson(jsonDecode(response.body)));
       }
       return Result.error(
