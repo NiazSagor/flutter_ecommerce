@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_ecommerce/domain/models/product.dart';
 import 'package:flutter_ecommerce/domain/models/string_extension.dart';
+import 'package:flutter_ecommerce/ui/features/products/components/promo_strip.dart';
 import 'package:flutter_ecommerce/ui/features/products/components/search_bar_placeholder.dart';
 import 'package:flutter_ecommerce/ui/features/products/widgets/product_card.dart';
 import 'package:provider/provider.dart';
@@ -59,7 +60,7 @@ class _ProductListScreenState extends State<ProductListScreen>
   @override
   void dispose() {
     context.read<ProductListViewModel>().removeListener(_handleViewModelChange);
-    _tabController!.dispose();
+    _tabController?.dispose();
     super.dispose();
   }
 
@@ -92,28 +93,63 @@ class _ProductListScreenState extends State<ProductListScreen>
                       expandedHeight: 200.0,
                       pinned: true,
                       floating: true,
-                      snap: true,
+                      snap: false,
                       automaticallyImplyLeading: false,
                       forceElevated: innerBoxIsScrolled,
                       flexibleSpace: FlexibleSpaceBar(
+                        stretchModes: const [StretchMode.blurBackground],
                         background: Container(
                           color: Colors.orange,
                           child: Column(
                             children: [
-                              const SizedBox(height: 20),
                               const SearchBarPlaceholder(),
-                              const SizedBox(height: 40),
+                              const SizedBox(height: 10),
+                              const PromoStrip(),
+                              const Spacer(),
                             ],
                           ),
                         ),
                       ),
                       bottom: TabBar(
+                        splashFactory: NoSplash.splashFactory,
                         controller: _tabController!,
                         isScrollable: true,
-                        indicatorColor: Colors.white,
                         tabAlignment: TabAlignment.start,
+                        physics: const BouncingScrollPhysics(),
+                        indicatorSize: TabBarIndicatorSize.tab,
+                        indicatorPadding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 8,
+                        ),
+                        indicator: BoxDecoration(
+                          borderRadius: BorderRadius.circular(25),
+                          color: Colors.white,
+                        ),
+
+                        labelColor: Colors.orange.shade800,
+                        unselectedLabelColor: Colors.black.withOpacity(0.7),
+                        labelStyle: const TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.bold,
+                          letterSpacing: 0.5,
+                        ),
+                        unselectedLabelStyle: const TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w500,
+                        ),
+                        dividerColor: Colors.transparent,
+
                         tabs: categories
-                            .map((name) => Tab(text: name.toTitleCase()))
+                            .map(
+                              (name) => Tab(
+                                child: Padding(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 12,
+                                  ),
+                                  child: Text(name.toTitleCase()),
+                                ),
+                              ),
+                            )
                             .toList(),
                       ),
                     ),
@@ -173,9 +209,7 @@ class _ProductGridCategoryState extends State<_ProductGridCategory>
           displacement: 20,
           onRefresh: _refreshCurrentCategory,
           child: CustomScrollView(
-            physics: const BouncingScrollPhysics(
-              parent: AlwaysScrollableScrollPhysics(),
-            ),
+            physics: const NeverScrollableScrollPhysics(),
             key: PageStorageKey(widget.category),
             slivers: [
               SliverOverlapInjector(
@@ -223,7 +257,9 @@ class _ProductGridCategoryState extends State<_ProductGridCategory>
               crossAxisSpacing: 10,
             ),
             delegate: SliverChildBuilderDelegate(
-              (context, index) => ProductCard(product: data.items[index]),
+              (context, index) => RepaintBoundary(
+                child: ProductCard(product: data.items[index]),
+              ),
               childCount: data.items.length,
             ),
           ),

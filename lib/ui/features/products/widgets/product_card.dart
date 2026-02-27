@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_ecommerce/domain/models/product.dart';
 
@@ -42,7 +43,31 @@ class ProductCard extends StatelessWidget {
                     ),
                     child: Hero(
                       tag: 'product_${product.id}',
-                      child: Image.network(product.image, fit: BoxFit.contain),
+                      child: CachedNetworkImage(
+                        imageUrl: product.image,
+                        fit: BoxFit.contain,
+                        memCacheWidth: 300,
+                        memCacheHeight: 300,
+                        placeholder: (context, url) => Container(
+                          color: Colors.grey[100],
+                          child: const Center(
+                            child: Icon(
+                              Icons.image_outlined,
+                              color: Colors.grey,
+                              size: 20,
+                            ),
+                          ),
+                        ),
+                        errorWidget: (context, url, error) => Container(
+                          color: Colors.grey[200],
+                          child: const Icon(
+                            Icons.broken_image_outlined,
+                            color: Colors.grey,
+                          ),
+                        ),
+                        fadeInDuration: const Duration(milliseconds: 300),
+                        fadeOutDuration: const Duration(milliseconds: 300),
+                      ),
                     ),
                   ),
                   Positioned(
