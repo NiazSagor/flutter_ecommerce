@@ -1,193 +1,91 @@
-# Scroll Architecture & Gesture Coordination
+# Architecture & Scrolling Documentation
 
-This implementation prioritizes correct scroll ownership, gesture coordination, and sliver composition over UI complexity.
-
----
-
-# 1. Horizontal Swipe Implementation
-
-## A. Product
-
-**Implementation**
-- Each `ProductCard` wrapped with `RepaintBoundary`
-
-### Why this approach?
-
-`RepaintBoundary` improves scroll performance by isolating complex painting
-
-### Trade-offs
-
-- `RepaintBoundary` improves scroll performance by isolating complex painting (shadows, rounded corners).
-- However, it increases memory usage slightly because widgets are cached as layers.
-- Horizontal `ListView` inside a sliver layout requires careful composition to avoid gesture conflicts.
-- Overuse of `RepaintBoundary` can hurt performance if not used selectively.
+This project implements a professional e-commerce style product feed with dynamic grids, sticky tabs, and nested scrolling using Flutter.
 
 ---
 
-## B. Category Switching (TabBar + TabBarView)
+## 1. Overview
 
-**Implementation**
-- `TabBarView`
-- Shared `TabController`
-- `TabBar` inside `SliverAppBar`
-
-### Why this approach?
-
-`TabController` acts as a single source of truth:
-- Swiping pages updates the indicator.
-- Tapping tabs updates the page.
-- No manual sync logic required.
-
-### Trade-offs
-
-- Recreating `TabController` when categories change adds lifecycle complexity.
-- If categories reorder dynamically (not just length change), tab state may reset.
-- `TabBarView` eagerly builds all children unless carefully managed.
-- Horizontal swipe between categories increases memory use when combined with `KeepAlive`.
+- Uses **Sliver-based layout** to achieve a single-scroll architecture.
+- Dynamic, responsive **grid** layout for products.
+- Sticky category **TabBar** with horizontal swipe support.
+- Pull-to-refresh per category with `RefreshIndicator`.
+- State preservation when switching tabs using `AutomaticKeepAliveClientMixin` and `PageStorageKey`.
 
 ---
 
-# 2. Vertical Scroll Ownership
+## 2. Horizontal Swipe (Tabs)
 
-## Decision: `NestedScrollView` Owns Vertical Scroll
+- Implemented using `TabBarView` and `TabController`.
+- The `TabController` acts as the **source of truth**:
+  - Swiping horizontally updates the selected tab indicator.
+  - Tapping on a tab updates the grid for the correct category.
+- Tabs are scrollable and styled dynamically.
 
-**Implementation**
-- `NestedScrollView` as the root scroll container
-- Inner `CustomScrollView` with `NeverScrollableScrollPhysics`
-
-### Why this approach?
-
-This ensures:
-- Single vertical scroll owner
-- Proper collapsing header behavior
-- No competing primary scrollables
-- Clean velocity handoff
-
-### Trade-offs
-
-- `NestedScrollView` is more complex than a standard `CustomScrollView`.
-- Debugging nested scroll behaviors is harder.
-- Pull-to-refresh becomes more fragile.
-- Advanced scroll effects are harder to customize.
+**Trade-offs:**
+- Tabs must be managed via `_tabController` for sync.
+- More dynamic layouts could require additional listeners, increasing complexity slightly.
 
 ---
 
-# 3. Inner Grid Scroll Disabled
+## 3. Vertical Scroll Ownership
 
-**Implementation**
-```dart
-physics: NeverScrollableScrollPhysics()
-```
-### Why this approach?
-Prevents dual vertical scroll ownership.
-### Trade-offs
-- Inner grid cannot independently scroll.
-- Any future requirement like per-tab independent scroll physics becomes harder.
-- Requires SliverOverlapInjector to align layout correctly.
+- Managed by `NestedScrollView`.
+- Outer scrollable:
+  - `SliverAppBar` pinned with TabBar
+  - `SliverToBoxAdapter` contains `SearchBarPlaceholder` + `PromoStrip`
+- Inner scrollable (per tab):
+  - `CustomScrollView` inside `_ProductGridCategory` with `NeverScrollableScrollPhysics`
+  - Uses `SliverOverlapInjector` to account for pinned header
 
----
+**Rationale:**
+- Ensures a **single coordinated scroll**, avoiding conflicts between the header and inner grids.
+- Mimics high-end marketplaces where the header collapses and tabs remain sticky.
 
-# 4. Sliver Overlap Management
-**Implementation**
-- SliverOverlapAbsorber
-- SliverOverlapInjector
-
-### Why this approach?
-Without this:
-- First grid row would render under the SliverAppBar.
-- Inner scroll would not account for header height.
-
-### Trade-offs
-- Adds structural complexity.
-- Requires precise placement.
-- Small mistakes cause visual bugs that are hard to debug.
+**Trade-offs:**
+- Inner scrollable cannot scroll independently, must coordinate with outer scroll.
+- Requires careful setup of `SliverOverlapAbsorber` and `SliverOverlapInjector`.
 
 ---
 
-# 5. Snap Disabled (snap: false)
+## 4. Product Grid
 
-### Why this approach?
-snap: true can cause velocity tug-of-war between:
-- Collapsing header
-- Inner scroll content
-- Disabling snap ensures smooth velocity transfer.
+- Built with `SliverGrid` inside `_ProductGridCategory`.
+- Fully **dynamic and responsive**:
+  - `crossAxisCount` adapts to screen width and orientation.
+  - `childAspectRatio` calculated from available width and desired height.
+  - Grid spacing (`mainAxisSpacing` & `crossAxisSpacing`) scales with screen size.
+  - Outer padding applied via `SliverPadding` to prevent items from touching screen edges.
 
-### Trade-offs
-- UI feels slightly less dynamic.
-- Header does not auto-expand on minor upward scroll.
-- Requires more deliberate user gesture to expand.
+- Pull-to-refresh is implemented per category with `RefreshIndicator`:
+  - `edgeOffset` matches the pinned TabBar height to ensure spinner is fully visible.
+  
+**Trade-offs:**
+- Dynamic calculations make the grid flexible but slightly more complex.
+- Very large text scaling could slightly affect aspect ratios.
+- Memory usage increases due to `AutomaticKeepAliveClientMixin` keeping each tab in memory.
 
----
-# 6. State Preservation Per Tab
-**Implementation**
-- AutomaticKeepAliveClientMixin
-- PageStorageKey
-
-### Why this approach?
-Prevents:
-- Re-fetching data on tab switch
-- Scroll position reset
-- Visible rebuild jank
-
-### Trade-offs
-- Increased memory usage.
-- All visited tabs remain alive in memory.
-- Not ideal if categories scale to dozens or hundreds.
+**Limitation:**
+- The header height is still dependent on the content in `SliverToBoxAdapter`. If `SearchBarPlaceholder` or `PromoStrip` grows dynamically, you must adjust accordingly.
+- Pull-to-refresh is bound to inner scrollable; wrapping `NestedScrollView` could change gesture behavior.
 
 ---
 
-# 7. RefreshIndicator in NestedScrollView
-**Implementation**
-- Wrapped with Builder
-- edgeOffset: 60
+## 5. Performance Considerations
 
-### Why this approach?
-NestedScrollView outer scroll can consume the pull gesture.
-The offset ensures refresh gesture reaches inner grid.
-
-### Trade-offs
-- Magic offset value (tied to header height).
-- Fragile if header height changes.
-- Pull-to-refresh inside NestedScrollView is inherently less predictable than in a standalone scroll view.
+- `RepaintBoundary` used on `ProductCard` to prevent unnecessary repaints.
+- `SliverChildBuilderDelegate` lazily builds grid items.
+- Dynamic spacing and aspect ratio calculations keep layouts responsive across devices.
+- `SafeArea` applied at top-level ensures content is not clipped by notches or status bars.
 
 ---
 
-# 8. Fixed Expanded Header Height
-**Implementation**
-expandedHeight: 200.0
+## 6. Summary of Trade-offs
 
-### Why this approach?
-Ensures deterministic layout and predictable collapse behavior.
-
-### Trade-offs
-- Not dynamic.
-- If header content changes size, manual adjustment required.
-- Risk of overflow if header grows.
-
----
-# Overall Architectural Trade-offs
-This architecture prioritizes:
-- Single vertical scroll ownership
-- Gesture conflict avoidance
-- Predictable collapse behavior
-- State preservation
-- Sliver correctness
-
-Over:
-- Simplicity
-- Minimal memory usage
-- Fully dynamic header sizing
-- Minimal structural complexity
-
-
----
-# Overall Limitations of the Approach
-1. NestedScrollView is inherently complex and harder to maintain.
-3. Pull-to-refresh inside nested scroll structures is fragile.
-4. Memory usage increases due to:
-5. KeepAlive
-6. TabBarView
-7. RepaintBoundary
-8. Header height is not fully dynamic.
-9. Scaling to many categories would increase memory and lifecycle overhead.
-10. This structure is optimized for UX smoothness, not minimal resource usage.
+| Feature | Decision | Trade-off |
+|---------|---------|-----------|
+| Horizontal swipe | `TabBarView` + `TabController` | Need to manage controller lifecycle |
+| Sticky header | `SliverAppBar` pinned + `SliverOverlapInjector` | Inner scroll must be coordinated; slightly more complex |
+| Grid layout | Dynamic spacing, columns, and aspect ratio | Slight complexity; may need adjustments for extreme text scaling |
+| Refresh indicator | `edgeOffset` matches TabBar height | Works per tab; inner scroll only |
+| State preservation | `AutomaticKeepAliveClientMixin` | Slightly higher memory usage |
