@@ -82,34 +82,32 @@ class _ProductListScreenState extends State<ProductListScreen>
               physics: const BouncingScrollPhysics(
                 parent: AlwaysScrollableScrollPhysics(),
               ),
-              floatHeaderSlivers: true,
               headerSliverBuilder: (context, innerBoxIsScrolled) {
                 return [
+                  SliverToBoxAdapter(
+                    child: Container(
+                      color: Colors.orange,
+                      child: Column(
+                        children: const [
+                          SearchBarPlaceholder(),
+                          SizedBox(height: 10),
+                          PromoStrip(),
+                        ],
+                      ),
+                    ),
+                  ),
                   SliverOverlapAbsorber(
                     handle: NestedScrollView.sliverOverlapAbsorberHandleFor(
                       context,
                     ),
                     sliver: SliverAppBar(
-                      expandedHeight: 200.0,
                       pinned: true,
-                      floating: true,
+                      floating: false,
                       snap: false,
                       automaticallyImplyLeading: false,
+                      backgroundColor: Colors.orange,
                       forceElevated: innerBoxIsScrolled,
-                      flexibleSpace: FlexibleSpaceBar(
-                        stretchModes: const [StretchMode.blurBackground],
-                        background: Container(
-                          color: Colors.orange,
-                          child: Column(
-                            children: [
-                              const SearchBarPlaceholder(),
-                              const SizedBox(height: 10),
-                              const PromoStrip(),
-                              const Spacer(),
-                            ],
-                          ),
-                        ),
-                      ),
+                      toolbarHeight: 0,
                       bottom: TabBar(
                         splashFactory: NoSplash.splashFactory,
                         controller: _tabController!,
@@ -125,7 +123,6 @@ class _ProductListScreenState extends State<ProductListScreen>
                           borderRadius: BorderRadius.circular(25),
                           color: Colors.white,
                         ),
-
                         labelColor: Colors.orange.shade800,
                         unselectedLabelColor: Colors.black.withOpacity(0.7),
                         labelStyle: const TextStyle(
@@ -138,7 +135,6 @@ class _ProductListScreenState extends State<ProductListScreen>
                           fontWeight: FontWeight.w500,
                         ),
                         dividerColor: Colors.transparent,
-
                         tabs: categories
                             .map(
                               (name) => Tab(
@@ -205,8 +201,7 @@ class _ProductGridCategoryState extends State<_ProductGridCategory>
     return Builder(
       builder: (context) {
         return RefreshIndicator(
-          edgeOffset: 60,
-          displacement: 20,
+          edgeOffset: kToolbarHeight.toDouble(),
           onRefresh: _refreshCurrentCategory,
           child: CustomScrollView(
             physics: const NeverScrollableScrollPhysics(),
@@ -226,6 +221,20 @@ class _ProductGridCategoryState extends State<_ProductGridCategory>
   }
 
   Widget _buildGrid() {
+    final media = MediaQuery.of(context);
+    final screenWidth = media.size.width;
+    final orientation = media.orientation;
+    final spacing = screenWidth * 0.02;
+
+    final crossAxisCount = orientation == Orientation.portrait
+        ? (screenWidth / 160).floor().clamp(1, 4)
+        : (screenWidth / 200).floor().clamp(2, 6);
+
+    final totalSpacing = spacing * (crossAxisCount + 1);
+    final itemWidth = (screenWidth - totalSpacing) / crossAxisCount;
+    final itemHeight = itemWidth * 1.4;
+    final childAspectRatio = itemWidth / itemHeight;
+
     return Selector<
       ProductListViewModel,
       ({bool loading, List<Product> items})
@@ -248,18 +257,20 @@ class _ProductGridCategoryState extends State<_ProductGridCategory>
         }
 
         return SliverPadding(
-          padding: const EdgeInsets.all(8.0),
+          padding: EdgeInsets.symmetric(
+            horizontal: spacing,
+            vertical: spacing,
+          ),
           sliver: SliverGrid(
-            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: 2,
-              childAspectRatio: 0.7,
-              mainAxisSpacing: 10,
-              crossAxisSpacing: 10,
+            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: crossAxisCount,
+              childAspectRatio: childAspectRatio,
+              mainAxisSpacing: spacing,
+              crossAxisSpacing: spacing,
             ),
             delegate: SliverChildBuilderDelegate(
-              (context, index) => RepaintBoundary(
-                child: ProductCard(product: data.items[index]),
-              ),
+              (context, index) =>
+                  RepaintBoundary(child: ProductCard(product: data.items[index])),
               childCount: data.items.length,
             ),
           ),
