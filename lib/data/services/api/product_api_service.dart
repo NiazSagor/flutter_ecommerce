@@ -1,5 +1,8 @@
 import 'dart:convert';
+
+import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as _httpClient;
+
 import '../../../utils/result.dart';
 import 'api_endpoints.dart';
 import 'api_exception.dart';
@@ -8,6 +11,11 @@ import 'model/product/produdct_dto.dart';
 class ProductApiService extends BaseApiService {
   ProductApiService(super.httpClient);
 
+  static List<ProductDto> _parseProductList(String responseBody) {
+    final List<dynamic> data = jsonDecode(responseBody);
+    return data.map((json) => ProductDto.fromJson(json)).toList();
+  }
+
   Future<Result<List<ProductDto>>> getAllProducts() async {
     try {
       final response = await _httpClient.get(
@@ -15,10 +23,8 @@ class ProductApiService extends BaseApiService {
         headers: headers,
       );
       if (response.statusCode == 200) {
-        final List<dynamic> data = jsonDecode(response.body);
-        return Result.ok(
-          data.map((json) => ProductDto.fromJson(json)).toList(),
-        );
+        final products = await compute(_parseProductList, response.body);
+        return Result.ok(products);
       }
       return Result.error(
         ApiException(statusCode: response.statusCode, message: 'Load Error'),
@@ -39,10 +45,8 @@ class ProductApiService extends BaseApiService {
         headers: headers,
       );
       if (response.statusCode == 200) {
-        final List<dynamic> data = jsonDecode(response.body);
-        return Result.ok(
-          data.map((json) => ProductDto.fromJson(json)).toList(),
-        );
+        final products = await compute(_parseProductList, response.body);
+        return Result.ok(products);
       }
       return Result.error(
         ApiException(
