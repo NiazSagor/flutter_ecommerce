@@ -257,7 +257,9 @@ class _ProductGridCategoryState extends State<_ProductGridCategory>
               crossAxisSpacing: 10,
             ),
             delegate: SliverChildBuilderDelegate(
-              (context, index) => ProductCard(product: data.items[index]),
+              (context, index) => RepaintBoundary(
+                child: ProductCard(product: data.items[index]),
+              ),
               childCount: data.items.length,
             ),
           ),
