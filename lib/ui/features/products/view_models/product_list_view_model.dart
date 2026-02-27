@@ -8,71 +8,52 @@ class ProductListViewModel extends ChangeNotifier {
   ProductListViewModel({required ProductRepository productRepository})
     : _productRepository = productRepository;
 
+  final Map<String, List<Product>> _categoryProducts = {};
+  final Map<String, bool> _loadingStates = {};
+
+  List<Product> getProducts(String category) => _categoryProducts[category] ?? [];
+  bool isLoading(String category) => _loadingStates[category] ?? false;
+
   final ProductRepository _productRepository;
-
-  List<Product> _products = [];
-
-  List<Product> get products => _products;
 
   List<String> _categories = ['all'];
 
   List<String> get categories => _categories;
-
-  String _selectedCategory = 'all';
-
-  String get selectedCategory => _selectedCategory;
-
-  bool _isLoading = false;
-
-  bool get isLoading => _isLoading;
 
   String? _errorMessage;
 
   String? get errorMessage => _errorMessage;
 
   Future<void> init() async {
-    await Future.wait([_fetchCategories(), loadProducts()]);
+    await Future.wait([_fetchCategories()]);
   }
 
-  Future<void> refresh() async {
-    _productRepository.clearCache();
+  Future<void> refresh(String category) async {
+    _categoryProducts.remove(category);
     _errorMessage = null;
-    await loadProducts(forceRefresh: true);
+    await fetchByCategory(category);
   }
 
-  /// Fetches products, optionally filtered by the current selected category.
-  Future<void> loadProducts({bool forceRefresh = false}) async {
+  Future<void> fetchByCategory(String category) async {
+    if (_categoryProducts.containsKey(category)) return;
 
-    // If not a pull-to-refresh, show our internal loading state
-    if (!forceRefresh) {
-      _isLoading = true;
-      _errorMessage = null;
-      notifyListeners();
-    }
+    _loadingStates[category] = true;
+    notifyListeners();
 
-    final result = await _productRepository.getProducts(
-      category: _selectedCategory == 'all' ? null : _selectedCategory,
-    );
+    final result = category == 'all'
+        ? await _productRepository.getAllProducts()
+        : await _productRepository.getProductsByCategory(category);
 
     switch (result) {
       case Ok(value: final data):
-        _products = data;
+        _categoryProducts[category] = data;
         _errorMessage = null;
       case Error(error: final e):
         _errorMessage = e.toString();
     }
 
-    _isLoading = false;
+    _loadingStates[category] = false;
     notifyListeners();
-  }
-
-  /// Updates the selected category and triggers a new product fetch.
-  Future<void> updateCategory(String category) async {
-    if (_selectedCategory == category) return;
-
-    _selectedCategory = category;
-    notifyListeners();
-    await loadProducts();
   }
 
   Future<void> _fetchCategories() async {
