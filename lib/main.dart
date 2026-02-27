@@ -7,10 +7,9 @@ import 'package:flutter_ecommerce/data/services/api/product_api_service.dart';
 import 'package:flutter_ecommerce/ui/navigation/main_nav.dart';
 import 'package:http/http.dart' as http;
 import 'package:provider/provider.dart';
+
 import 'ui/features/auth/view_models/auth_view_model.dart';
-import 'ui/features/auth/views/login_screen.dart';
 import 'ui/features/products/view_models/product_list_view_model.dart';
-import 'ui/features/products/views/product_list_screen.dart';
 import 'ui/features/profile/view_models/user_view_model.dart';
 
 void main() {
