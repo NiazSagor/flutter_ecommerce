@@ -1,3 +1,4 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter_ecommerce/data/repositories/mappers/product_mapper.dart';
 import 'package:flutter_ecommerce/data/repositories/product/product_repository.dart';
 import 'package:flutter_ecommerce/data/services/api/model/product/produdct_dto.dart';
@@ -29,6 +30,7 @@ class ProductRepositoryRemote implements ProductRepository {
     if (_cachedCategories != null) return Result.ok(_cachedCategories!);
 
     final result = await _apiService.getCategories();
+
     if (result is Ok<List<String>>) {
       _cachedCategories = result.value;
     }

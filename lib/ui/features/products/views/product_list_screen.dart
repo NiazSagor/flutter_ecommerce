@@ -1,15 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_ecommerce/domain/models/string_extension.dart';
 import 'package:flutter_ecommerce/ui/features/products/widgets/product_card.dart';
 import 'package:provider/provider.dart';
 
 import '../view_models/product_list_view_model.dart';
-
-class _TabDef {
-  final String label;
-  final String category;
-
-  const _TabDef({required this.label, required this.category});
-}
 
 class ProductListScreen extends StatefulWidget {
   const ProductListScreen({super.key});
@@ -20,53 +14,54 @@ class ProductListScreen extends StatefulWidget {
 
 class _ProductListScreenState extends State<ProductListScreen>
     with TickerProviderStateMixin {
-  late TabController _tabController;
+  TabController? _tabController;
+  List<String> _currentCategories = [];
 
-  static const List<_TabDef> _tabs = [
-    _TabDef(label: 'All', category: 'all'),
-    _TabDef(label: 'Electronics', category: 'electronics'),
-    _TabDef(label: 'Jewelery', category: 'jewelery'),
-    _TabDef(label: "Men's", category: "men's clothing"),
-    _TabDef(label: "Women's", category: "women's clothing"),
-  ];
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final newCategories = context.watch<ProductListViewModel>().categories;
+    if (_currentCategories != newCategories && newCategories.isNotEmpty) {
+      _currentCategories = newCategories;
+      _tabController?.dispose();
+      _tabController = TabController(
+        length: _currentCategories.length,
+        vsync: this,
+      );
+
+      _tabController!.addListener(() {
+        if (!mounted) return;
+        if (!_tabController!.indexIsChanging) {
+          _fetchCurrentTab();
+        }
+      });
+    }
+  }
 
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: _tabs.length, vsync: this);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
       context.read<ProductListViewModel>().init();
-    });
-
-    // Fetch data when tab changes
-    _tabController.addListener(() {
-      if (!mounted) return;
-      if (!_tabController.indexIsChanging) {
-        _fetchCurrentTab();
-      }
     });
   }
 
   void _fetchCurrentTab() {
     if (!mounted) return;
-    final category = _tabs[_tabController.index].category;
+    final category = _currentCategories[_tabController!.index];
     context.read<ProductListViewModel>().fetchByCategory(category);
   }
 
   @override
   void dispose() {
-    _tabController.dispose();
+    _tabController!.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    final categories = context.select<ProductListViewModel, List<String>>(
-      (vm) => vm.categories,
-    );
-
-    if (categories.isEmpty) {
+    if (_tabController == null || _currentCategories.isEmpty) {
       return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
     return SafeArea(
@@ -81,7 +76,9 @@ class _ProductListScreenState extends State<ProductListScreen>
           headerSliverBuilder: (context, innerBoxIsScrolled) {
             return [
               SliverOverlapAbsorber(
-                handle: NestedScrollView.sliverOverlapAbsorberHandleFor(context),
+                handle: NestedScrollView.sliverOverlapAbsorberHandleFor(
+                  context,
+                ),
                 sliver: SliverAppBar(
                   expandedHeight: 200.0,
                   pinned: true,
@@ -102,12 +99,12 @@ class _ProductListScreenState extends State<ProductListScreen>
                     ),
                   ),
                   bottom: TabBar(
-                    controller: _tabController,
+                    controller: _tabController!,
                     isScrollable: true,
                     indicatorColor: Colors.white,
                     tabAlignment: TabAlignment.start,
-                    tabs: categories
-                        .map((name) => Tab(text: name.toUpperCase()))
+                    tabs: _currentCategories
+                        .map((name) => Tab(text: name.toTitleCase()))
                         .toList(),
                   ),
                 ),
@@ -115,8 +112,8 @@ class _ProductListScreenState extends State<ProductListScreen>
             ];
           },
           body: TabBarView(
-            controller: _tabController,
-            children: categories.map((categoryName) {
+            controller: _tabController!,
+            children: _currentCategories.map((categoryName) {
               return _ProductGridCategory(category: categoryName);
             }).toList(),
           ),
