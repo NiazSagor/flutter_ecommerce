@@ -69,53 +69,57 @@ class _ProductListScreenState extends State<ProductListScreen>
     if (categories.isEmpty) {
       return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
-    return Scaffold(
-      body: NestedScrollView(
-        physics: const BouncingScrollPhysics(
-          parent: AlwaysScrollableScrollPhysics(),
-        ),
-        floatHeaderSlivers: true,
-        headerSliverBuilder: (context, innerBoxIsScrolled) {
-          return [
-            SliverOverlapAbsorber(
-              handle: NestedScrollView.sliverOverlapAbsorberHandleFor(context),
-              sliver: SliverAppBar(
-                expandedHeight: 200.0,
-                pinned: true,
-                floating: true,
-                snap: true,
-                automaticallyImplyLeading: false,
-                forceElevated: innerBoxIsScrolled,
-                flexibleSpace: FlexibleSpaceBar(
-                  background: Container(
-                    color: Colors.orange,
-                    child: Column(
-                      children: [
-                        const SizedBox(height: 20),
-                        _buildSearchBar(context),
-                        const SizedBox(height: 40),
-                      ],
+    return SafeArea(
+      top: false,
+      bottom: false,
+      child: Scaffold(
+        body: NestedScrollView(
+          physics: const BouncingScrollPhysics(
+            parent: AlwaysScrollableScrollPhysics(),
+          ),
+          floatHeaderSlivers: true,
+          headerSliverBuilder: (context, innerBoxIsScrolled) {
+            return [
+              SliverOverlapAbsorber(
+                handle: NestedScrollView.sliverOverlapAbsorberHandleFor(context),
+                sliver: SliverAppBar(
+                  expandedHeight: 200.0,
+                  pinned: true,
+                  floating: true,
+                  snap: true,
+                  automaticallyImplyLeading: false,
+                  forceElevated: innerBoxIsScrolled,
+                  flexibleSpace: FlexibleSpaceBar(
+                    background: Container(
+                      color: Colors.orange,
+                      child: Column(
+                        children: [
+                          const SizedBox(height: 20),
+                          _buildSearchBar(context),
+                          const SizedBox(height: 40),
+                        ],
+                      ),
                     ),
                   ),
-                ),
-                bottom: TabBar(
-                  controller: _tabController,
-                  isScrollable: true,
-                  indicatorColor: Colors.white,
-                  tabAlignment: TabAlignment.start,
-                  tabs: categories
-                      .map((name) => Tab(text: name.toUpperCase()))
-                      .toList(),
+                  bottom: TabBar(
+                    controller: _tabController,
+                    isScrollable: true,
+                    indicatorColor: Colors.white,
+                    tabAlignment: TabAlignment.start,
+                    tabs: categories
+                        .map((name) => Tab(text: name.toUpperCase()))
+                        .toList(),
+                  ),
                 ),
               ),
-            ),
-          ];
-        },
-        body: TabBarView(
-          controller: _tabController,
-          children: categories.map((categoryName) {
-            return _ProductGridCategory(category: categoryName);
-          }).toList(),
+            ];
+          },
+          body: TabBarView(
+            controller: _tabController,
+            children: categories.map((categoryName) {
+              return _ProductGridCategory(category: categoryName);
+            }).toList(),
+          ),
         ),
       ),
     );
@@ -180,32 +184,28 @@ class _ProductGridCategoryState extends State<_ProductGridCategory>
   @override
   Widget build(BuildContext context) {
     super.build(context);
-    return SafeArea(
-      top: false,
-      bottom: false,
-      child: Builder(
-        builder: (context) {
-          return RefreshIndicator(
-            edgeOffset: 60,
-            displacement: 20,
-            onRefresh: _refreshCurrentCategory,
-            child: CustomScrollView(
-              physics: const BouncingScrollPhysics(
-                parent: AlwaysScrollableScrollPhysics(),
-              ),
-              key: PageStorageKey(widget.category),
-              slivers: [
-                SliverOverlapInjector(
-                  handle: NestedScrollView.sliverOverlapAbsorberHandleFor(
-                    context,
-                  ),
-                ),
-                _buildGrid(context),
-              ],
+    return Builder(
+      builder: (context) {
+        return RefreshIndicator(
+          edgeOffset: 60,
+          displacement: 20,
+          onRefresh: _refreshCurrentCategory,
+          child: CustomScrollView(
+            physics: const BouncingScrollPhysics(
+              parent: AlwaysScrollableScrollPhysics(),
             ),
-          );
-        },
-      ),
+            key: PageStorageKey(widget.category),
+            slivers: [
+              SliverOverlapInjector(
+                handle: NestedScrollView.sliverOverlapAbsorberHandleFor(
+                  context,
+                ),
+              ),
+              _buildGrid(context),
+            ],
+          ),
+        );
+      },
     );
   }
 
