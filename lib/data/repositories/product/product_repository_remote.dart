@@ -10,26 +10,15 @@ class ProductRepositoryRemote implements ProductRepository {
     : _apiService = apiService;
 
   final ProductApiService _apiService;
-
-  // Cache storage
-  final Map<String, List<Product>> _categoryCache = {};
   List<String>? _cachedCategories;
 
   @override
-  Future<Result<List<Product>>> getProducts({String? category}) async {
-    final key = category ?? 'all';
-
-    if (_categoryCache.containsKey(key)) {
-      return Result.ok(_categoryCache[key]!);
-    }
-
-    final result = await _apiService.getProductsByCategory(key);
-
+  Future<Result<List<Product>>> getProductsByCategory(String category) async {
+    final result = await _apiService.getProductsByCategory(category);
     if (result is Ok<List<ProductDto>>) {
       final products = result.value
           .map((dto) => ProductMapper.toDomain(dto))
           .toList();
-      _categoryCache[key] = products;
       return Result.ok(products);
     }
     return Result.error((result as Error).error);
@@ -48,7 +37,18 @@ class ProductRepositoryRemote implements ProductRepository {
 
   @override
   void clearCache() {
-    _categoryCache.clear();
     _cachedCategories = null;
+  }
+
+  @override
+  Future<Result<List<Product>>> getAllProducts() async {
+    final result = await _apiService.getAllProducts();
+    if (result is Ok<List<ProductDto>>) {
+      final products = result.value
+          .map((dto) => ProductMapper.toDomain(dto))
+          .toList();
+      return Result.ok(products);
+    }
+    return Result.error((result as Error).error);
   }
 }
