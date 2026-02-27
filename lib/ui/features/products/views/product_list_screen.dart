@@ -256,17 +256,23 @@ class _ProductGridCategoryState extends State<_ProductGridCategory>
           );
         }
 
-        return SliverGrid(
-          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount: crossAxisCount,
-            childAspectRatio: childAspectRatio,
-            mainAxisSpacing: spacing,
-            crossAxisSpacing: spacing,
+        return SliverPadding(
+          padding: EdgeInsets.symmetric(
+            horizontal: spacing,
+            vertical: spacing,
           ),
-          delegate: SliverChildBuilderDelegate(
-            (context, index) =>
-                RepaintBoundary(child: ProductCard(product: data.items[index])),
-            childCount: data.items.length,
+          sliver: SliverGrid(
+            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: crossAxisCount,
+              childAspectRatio: childAspectRatio,
+              mainAxisSpacing: spacing,
+              crossAxisSpacing: spacing,
+            ),
+            delegate: SliverChildBuilderDelegate(
+              (context, index) =>
+                  RepaintBoundary(child: ProductCard(product: data.items[index])),
+              childCount: data.items.length,
+            ),
           ),
         );
       },
