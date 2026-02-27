@@ -136,8 +136,6 @@ class _ProductListScreenState extends State<ProductListScreen>
                           fontSize: 14,
                           fontWeight: FontWeight.w500,
                         ),
-
-                        // 3. Removing default lines
                         dividerColor: Colors.transparent,
 
                         tabs: categories
