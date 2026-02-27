@@ -201,6 +201,7 @@ class _ProductGridCategoryState extends State<_ProductGridCategory>
     return Builder(
       builder: (context) {
         return RefreshIndicator(
+          edgeOffset: kToolbarHeight.toDouble(),
           onRefresh: _refreshCurrentCategory,
           child: CustomScrollView(
             physics: const NeverScrollableScrollPhysics(),
@@ -220,6 +221,20 @@ class _ProductGridCategoryState extends State<_ProductGridCategory>
   }
 
   Widget _buildGrid() {
+    final media = MediaQuery.of(context);
+    final screenWidth = media.size.width;
+    final orientation = media.orientation;
+    final spacing = screenWidth * 0.02;
+
+    final crossAxisCount = orientation == Orientation.portrait
+        ? (screenWidth / 160).floor().clamp(1, 4)
+        : (screenWidth / 200).floor().clamp(2, 6);
+
+    final totalSpacing = spacing * (crossAxisCount + 1);
+    final itemWidth = (screenWidth - totalSpacing) / crossAxisCount;
+    final itemHeight = itemWidth * 1.4;
+    final childAspectRatio = itemWidth / itemHeight;
+
     return Selector<
       ProductListViewModel,
       ({bool loading, List<Product> items})
@@ -241,21 +256,17 @@ class _ProductGridCategoryState extends State<_ProductGridCategory>
           );
         }
 
-        return SliverPadding(
-          padding: const EdgeInsets.all(8.0),
-          sliver: SliverGrid(
-            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: 2,
-              childAspectRatio: 0.7,
-              mainAxisSpacing: 10,
-              crossAxisSpacing: 10,
-            ),
-            delegate: SliverChildBuilderDelegate(
-              (context, index) => RepaintBoundary(
-                child: ProductCard(product: data.items[index]),
-              ),
-              childCount: data.items.length,
-            ),
+        return SliverGrid(
+          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: crossAxisCount,
+            childAspectRatio: childAspectRatio,
+            mainAxisSpacing: spacing,
+            crossAxisSpacing: spacing,
+          ),
+          delegate: SliverChildBuilderDelegate(
+            (context, index) =>
+                RepaintBoundary(child: ProductCard(product: data.items[index])),
+            childCount: data.items.length,
           ),
         );
       },
