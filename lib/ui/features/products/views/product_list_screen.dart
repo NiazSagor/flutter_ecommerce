@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_ecommerce/domain/models/product.dart';
 import 'package:flutter_ecommerce/domain/models/string_extension.dart';
+import 'package:flutter_ecommerce/ui/features/products/components/promo_strip.dart';
 import 'package:flutter_ecommerce/ui/features/products/components/search_bar_placeholder.dart';
 import 'package:flutter_ecommerce/ui/features/products/widgets/product_card.dart';
 import 'package:provider/provider.dart';
@@ -100,9 +101,10 @@ class _ProductListScreenState extends State<ProductListScreen>
                           color: Colors.orange,
                           child: Column(
                             children: [
-                              const SizedBox(height: 20),
                               const SearchBarPlaceholder(),
-                              const SizedBox(height: 40),
+                              const SizedBox(height: 10),
+                              const PromoStrip(),
+                              const Spacer(),
                             ],
                           ),
                         ),
