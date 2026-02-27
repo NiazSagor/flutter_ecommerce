@@ -59,7 +59,6 @@ class ProductListViewModel extends ChangeNotifier {
   Future<void> _fetchCategories() async {
     final result = await _productRepository.getCategories();
     if (result is Ok<List<String>>) {
-      debugPrint("sssssssssss _fetchCategories $result");
       _categories = ['all', ...result.value];
       notifyListeners();
     }
