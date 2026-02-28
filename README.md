@@ -66,7 +66,7 @@ This project implements a professional e-commerce style product feed with dynami
 - Memory usage increases due to `AutomaticKeepAliveClientMixin` keeping each tab in memory.
 
 **Limitation:**
-- The header height is still dependent on the content in `SliverToBoxAdapter`. If `SearchBarPlaceholder` or `PromoStrip` grows dynamically, you must adjust accordingly.
+- The header height is still dependent on the content in `SliverToBoxAdapter`. If `SearchBarPlaceholder` or `PromoStrip` grows dynamically, it will need adjuting accordingly.
 - Pull-to-refresh is bound to inner scrollable; wrapping `NestedScrollView` could change gesture behavior.
 
 ---
